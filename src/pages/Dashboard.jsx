@@ -32,6 +32,11 @@ const Dashboard = () => {
     handleCloseModal();
   };
 
+  const handleGiftClick = (blogId) => {
+    alert(`Gift option clicked for post ID: ${blogId}`);
+    // Implement your logic for the gift option here
+  };
+
   return (
     <div>
       <Topbar />
@@ -53,9 +58,16 @@ const Dashboard = () => {
                   {blog.title}
                 </Typography>
                 <img src={blog.image} alt={blog.title} className="w-full h-40 object-cover mb-4" />
-                <Typography color="blue-gray">
+                <Typography color="blue-gray" className="mb-4">
                   {blog.content}
                 </Typography>
+                <Button
+                  color="yellow"
+                  onClick={() => handleGiftClick(blog.id)}
+                  className="flex items-center gap-2"
+                >
+                  🎁 Gift
+                </Button>
               </Card>
             ))}
           </div>
