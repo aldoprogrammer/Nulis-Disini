@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Dialog, Input, Button, Typography, Tooltip } from "@material-tailwind/react";
+import axios from 'axios';
 
 const AddPostModal = ({ open, onClose, onAddPost }) => {
     const [newPost, setNewPost] = useState({ title: '', content: '' });
-    const [isGenerating, setIsGenerating] = useState({ ai: false, thumbnail: false, chart: false });
+    const [isGenerating, setIsGenerating] = useState({ ai: false, thumbnail: false, video: false });
+    const [thumbnailUrl, setThumbnailUrl] = useState('');
+    const [videoUrl, setVideoUrl] = useState('');
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -19,29 +22,82 @@ const AddPostModal = ({ open, onClose, onAddPost }) => {
 
     const handleGenerateContent = async () => {
         setIsGenerating(prev => ({ ...prev, ai: true }));
-        // Simulate an AI content generation process
-        setTimeout(() => {
-            setNewPost(prevPost => ({ ...prevPost, content: 'Generated AI content here...' }));
+        try {
+            // Include the title in the prompt
+            const prompt = `Generate content for a blog post titled: "${newPost.title}"`;
+            
+            const response = await axios.post('https://api.thetaedgecloud.com/generate', {
+                model: 'llama-3-8b',
+                prompt: prompt,
+                // Include other parameters if needed
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${import.meta.env.VITE_THETA_API_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            setNewPost(prevPost => ({ ...prevPost, content: response.data.generatedContent }));
+        } catch (error) {
+            console.error('Error generating content:', error);
+            alert('Failed to generate content. Please try again.');
+        } finally {
             setIsGenerating(prev => ({ ...prev, ai: false }));
-        }, 2000);
+        }
     };
 
     const handleGenerateThumbnail = async () => {
         setIsGenerating(prev => ({ ...prev, thumbnail: true }));
-        // Simulate thumbnail generation
-        setTimeout(() => {
-            alert('Thumbnail generated!');
+        try {
+            // Use the post title to generate the thumbnail
+            const prompt = `Create a visually appealing thumbnail for a blog post titled: "${newPost.title}"`;
+
+            const response = await axios.post('https://api.thetaedgecloud.com/stable-diffusion', {
+                model: 'stable-diffusion',
+                prompt: prompt,
+                // Include other parameters if needed
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${import.meta.env.VITE_THETA_API_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            // Set the URL of the generated thumbnail
+            setThumbnailUrl(response.data.imageUrl);
+        } catch (error) {
+            console.error('Error generating thumbnail:', error);
+            alert('Failed to generate thumbnail. Please try again.');
+        } finally {
             setIsGenerating(prev => ({ ...prev, thumbnail: false }));
-        }, 2000);
+        }
     };
 
-    const handleGenerateChart = async () => {
-        setIsGenerating(prev => ({ ...prev, chart: true }));
-        // Simulate chart generation
-        setTimeout(() => {
-            alert('Chart generated!');
-            setIsGenerating(prev => ({ ...prev, chart: false }));
-        }, 2000);
+    const handleGenerateVideo = async () => {
+        setIsGenerating(prev => ({ ...prev, video: true }));
+        try {
+            // Use the post title to generate the video
+            const prompt = `Create a visually engaging video for a blog post titled: "${newPost.title}"`;
+
+            const response = await axios.post('https://api.thetaedgecloud.com/stable-diffusion-video', {
+                model: 'stable-diffusion-video',
+                prompt: prompt,
+                // Include other parameters if needed
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${import.meta.env.VITE_THETA_API_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            // Set the URL of the generated video
+            setVideoUrl(response.data.videoUrl);
+        } catch (error) {
+            console.error('Error generating video:', error);
+            alert('Failed to generate video. Please try again.');
+        } finally {
+            setIsGenerating(prev => ({ ...prev, video: false }));
+        }
     };
 
     return (
@@ -86,11 +142,11 @@ const AddPostModal = ({ open, onClose, onAddPost }) => {
                         {isGenerating.thumbnail ? 'Generating Thumbnail...' : 'Generate Thumbnail'}
                     </Button>
                     <Button
-                        onClick={handleGenerateChart}
+                        onClick={handleGenerateVideo}
                         color="purple"
-                        disabled={isGenerating.chart}
+                        disabled={isGenerating.video}
                     >
-                        {isGenerating.chart ? 'Generating Chart...' : 'Generate Chart'}
+                        {isGenerating.video ? 'Generating Video...' : 'Generate Video'}
                     </Button>
                 </div>
                 <textarea
@@ -101,6 +157,24 @@ const AddPostModal = ({ open, onClose, onAddPost }) => {
                     rows="4"
                     placeholder="Enter post content here..."
                 />
+
+                {thumbnailUrl && (
+                    <div className="mt-4">
+                        <Typography variant="h6" color="blue-gray" className="font-bold">
+                            Generated Thumbnail
+                        </Typography>
+                        <img src={thumbnailUrl} alt="Generated Thumbnail" className="w-full mt-2 border border-blue-gray-300 rounded-md" />
+                    </div>
+                )}
+
+                {videoUrl && (
+                    <div className="mt-4">
+                        <Typography variant="h6" color="blue-gray" className="font-bold">
+                            Generated Video
+                        </Typography>
+                        <video src={videoUrl} controls className="w-full mt-2 border border-blue-gray-300 rounded-md" />
+                    </div>
+                )}
 
                 <div className="flex justify-end gap-4 mt-4">
                     <Button onClick={onClose} color="red" variant="outlined">
