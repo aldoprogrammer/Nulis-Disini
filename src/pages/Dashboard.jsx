@@ -4,16 +4,19 @@ import { Sidebar } from '../components/Sidebar';
 import { Card, Typography, Button } from "@material-tailwind/react";
 import Data from '../assets/blogs.json';
 import AddPostModal from '../modal/AddPostModal';
+import GiftModal from '../modal/GiftModal';
 
 const Dashboard = () => {
   const [blogs, setBlogs] = useState(Data);
   const [openModal, setOpenModal] = useState(false);
+  const [openGiftModal, setOpenGiftModal] = useState(false);
+  const [selectedBlog, setSelectedBlog] = useState(null);
 
   useEffect(() => {
     // Fetch the blog data
     const fetchBlogs = async () => {
       try {
-        const response = await fetch(Data); // Update the path to your JSON file
+        const response = await fetch('/path/to/your/blogs.json'); // Update the path to your JSON file
         const data = await response.json();
         setBlogs(data);
       } catch (error) {
@@ -27,14 +30,24 @@ const Dashboard = () => {
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
 
+  const handleOpenGiftModal = (blog) => {
+    setSelectedBlog(blog);
+    setOpenGiftModal(true);
+  };
+
+  const handleCloseGiftModal = () => setOpenGiftModal(false);
+
   const handleAddPost = (newPost) => {
     setBlogs(prevBlogs => [...prevBlogs, { id: Date.now(), ...newPost }]);
     handleCloseModal();
   };
 
-  const handleGiftClick = (blogId) => {
-    alert(`Gift option clicked for post ID: ${blogId}`);
-    // Implement your logic for the gift option here
+  const handleSendGift = (gift) => {
+    // Implement your logic to process the gift here, e.g., API call to handle Theta token transaction
+    if (selectedBlog) {
+      console.log(`Sending ${gift.name} (${gift.price} Theta tokens) to the author of post ID: ${selectedBlog.id}`);
+      // Call API or other services to process the gift
+    }
   };
 
   return (
@@ -63,7 +76,7 @@ const Dashboard = () => {
                 </Typography>
                 <Button
                   color="yellow"
-                  onClick={() => handleGiftClick(blog.id)}
+                  onClick={() => handleOpenGiftModal(blog)}
                   className="flex items-center gap-2"
                 >
                   🎁 Gift
@@ -79,6 +92,13 @@ const Dashboard = () => {
         open={openModal}
         onClose={handleCloseModal}
         onAddPost={handleAddPost}
+      />
+
+      {/* Modal for gift option */}
+      <GiftModal
+        open={openGiftModal}
+        onClose={handleCloseGiftModal}
+        onSendGift={handleSendGift}
       />
     </div>
   );
