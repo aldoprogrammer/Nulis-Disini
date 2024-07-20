@@ -100,6 +100,28 @@ const AddPostModal = ({ open, onClose, onAddPost }) => {
         }
     };
 
+    const handleSpeakContent = async () => {
+        try {
+            // Use Whisper AI for text-to-speech
+            const response = await axios.post('https://api.thetaedgecloud.com/whisper', {
+                text: newPost.content,
+                model: 'whisper-ai',
+                // Include other parameters if needed
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${import.meta.env.VITE_THETA_API_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const audio = new Audio(response.data.audioUrl);
+            audio.play();
+        } catch (error) {
+            console.error('Error generating speech:', error);
+            alert('Failed to generate speech. Please try again.');
+        }
+    };
+
     return (
         <Dialog open={open} onClose={onClose} size="sm" className="p-6">
             <div className="flex flex-col gap-4">
@@ -148,6 +170,13 @@ const AddPostModal = ({ open, onClose, onAddPost }) => {
                     >
                         {isGenerating.video ? 'Generating Video...' : 'Generate Video'}
                     </Button>
+                    <Button
+                        onClick={handleSpeakContent}
+                        color="teal"
+                        disabled={!newPost.content}
+                    >
+                        Speak Content
+                    </Button>
                 </div>
                 <textarea
                     name="content"
@@ -176,11 +205,11 @@ const AddPostModal = ({ open, onClose, onAddPost }) => {
                     </div>
                 )}
 
-                <div className="flex justify-end gap-4 mt-4">
+                <div className="flex justify-end gap-2 mt-4">
                     <Button onClick={onClose} color="red" variant="outlined">
                         Cancel
                     </Button>
-                    <Button onClick={handleAddPost} color="blue">
+                    <Button onClick={handleAddPost} color="green">
                         Add Post
                     </Button>
                 </div>
